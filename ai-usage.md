@@ -102,3 +102,42 @@ We have reviewed each document as a group and dicussed about pros, cons and poss
 | Idea and feasibility | Explained voice-assistant technology, proposed hardware and architecture | ✏️ Project idea, decision to keep voice/AI out of the MVP |
 | Specification draft  | Structure, first versions of stories, requirements, scoring model, MVP   | ✏️ Review, corrections, final decisions                   |
 | Validation           | 8 findings with proposed fixes (table above)                             | ✏️ Accepted/rejected fixes, independent re-check          |
+
+# AI usage – Phase 2 architecture
+
+This document records how AI support was used during architecture design. The student group must review it and replace or supplement the summaries with the actual prompts, tools and findings from its own work. Do not claim that an AI suggestion was implemented or verified unless the group checked it.
+
+## 1. Use of AI
+
+AI assistance was used to:
+
+- propose architecture variants for the Phase 1 requirements;
+- compare a browser SPA with a modular backend, a server-rendered monolith and a distributed approach;
+- adapt the technology proposal to Angular, Zard UI and Supabase;
+- draft C4 diagrams, data model, API contract and ADRs;
+- identify risks and inconsistencies between Phase 1 requirements and the proposed platform.
+
+## 2. Architecture suggestions and critical review
+
+| AI suggestion                                 | Critical question / evidence needed                                                                                                        | Current assessment                                                                                                                                                                                                                                                                  |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use Angular as a separate SPA                 | Does the team know Angular and can it implement the required flows within the semester?                                                    | Fits the requested frontend choice and FR-12; confirm team capability with a small UI spike                                                                                                                                                                                         |
+| Use Supabase for backend, Auth and PostgreSQL | Does hosted Supabase conflict with NFR-07's prohibition on sending task data to third parties? What are the region, terms and plan limits? | Important unresolved requirement conflict; hosted Supabase must not be described as automatically NFR-07 compliant                                                                                                                                                                  |
+| Use Edge Functions for prioritization         | Can the team test the function and maintain the same deterministic algorithm as a pure module?                                             | Plausible; benchmark cold starts and test the same rules with fixed dates                                                                                                                                                                                                           |
+| Use RLS as the user-data isolation boundary   | Are policies, grants and function JWT forwarding correct?                                                                                  | Strong defense-in-depth, but policy mistakes can expose data; negative cross-user tests are mandatory. Scope: RLS and cross-user isolation apply from US-09 (post-MVP); the single-user MVP has no authentication and relies on deny-all RLS plus a server-side service-role client |
+| Compute priority at read time                 | Can the API meet the 500-task p95 target after filtering and scoring?                                                                      | Matches AC-02.4 and NFR-04/05; benchmark before claiming performance                                                                                                                                                                                                                |
+| Deploy Angular separately from Supabase       | Are CORS, redirect URLs, environment config and provider dependencies manageable?                                                          | Reasonable for a SPA + managed backend; requires a documented deployment rehearsal                                                                                                                                                                                                  |
+
+## 3. Student group review – complete before submission
+
+✏️ Record the actual tool/model and date used, include representative prompts, and answer:
+
+1. **Which AI-generated architecture recommendation did the group reject or change, and why?**
+   The AI draft assumed user accounts (US-09) as part of the MVP: Supabase Auth, JWT-verified requests, a `user_id` column and per-user RLS appeared in every diagram, the data model and the API contract. This was rejected because mvp.md includes only Must-have stories and US-09 (accounts, FR-15) is a Should-have. The architecture was revised: the MVP is single-user without authentication (RLS deny-all, server-side service-role access), and authentication is documented as a post-MVP phase ([ADR-0004](0004-session-cookie-authentication.md); architecture.md sections 4, 7, 8; risk R7).
+2. **What evidence did the group collect (prototype, documentation, pricing, team skills or tests)?**
+    - A cross-check of mvp.md and requirements.md against the architecture documents, which exposed the US-09 MVP-scope conflict and led to this revision.
+    - Official Zard UI documentation on the Tailwind CSS v4 requirement and Angular version compatibility (section 3 above).
+    - No prototype or skills spike yet; pricing and free-tier verification are deferred to the deployment checklist in hosting.md and must be re-checked at decision time.
+3. **Which architecture decision did the group make independently of the AI recommendation?**
+   The scope decision itself: only Must-have stories ship in the MVP and accounts follow afterwards. This comes from the group's own Phase 1 MoSCoW prioritization (mvp.md), not from an AI recommendation; the AI-generated architecture had to be corrected to match it.
+
